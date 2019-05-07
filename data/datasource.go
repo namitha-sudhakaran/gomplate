@@ -3,7 +3,6 @@ package data
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"mime"
 	"net/http"
 	"net/url"
@@ -16,6 +15,7 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/hairyhenderson/gomplate/v3/datasources"
 	"github.com/hairyhenderson/gomplate/v3/internal/config"
 	"github.com/hairyhenderson/gomplate/v3/libkv"
 	"github.com/hairyhenderson/gomplate/v3/vault"
@@ -247,44 +247,18 @@ func (s *Source) String() string {
 func parseSource(value string) (source *Source, err error) {
 	source = &Source{}
 	parts := strings.SplitN(value, "=", 2)
+	f := parts[0]
 	if len(parts) == 1 {
-		f := parts[0]
 		source.Alias = strings.SplitN(value, ".", 2)[0]
 		if path.Base(f) != f {
 			err = errors.Errorf("Invalid datasource (%s). Must provide an alias with files not in working directory", value)
 			return nil, err
 		}
-		source.URL, err = absFileURL(f)
-		if err != nil {
-			return nil, err
-		}
 	} else if len(parts) == 2 {
 		source.Alias = parts[0]
-		source.URL, err = parseSourceURL(parts[1])
-		if err != nil {
-			return nil, err
-		}
+		f = parts[1]
 	}
-
-	return source, nil
-}
-
-func parseSourceURL(value string) (*url.URL, error) {
-	if value == "-" {
-		value = "stdin://"
-	}
-	value = filepath.ToSlash(value)
-	// handle absolute Windows paths
-	volName := ""
-	if volName = filepath.VolumeName(value); volName != "" {
-		// handle UNCs
-		if len(volName) > 2 {
-			value = "file:" + value
-		} else {
-			value = "file:///" + value
-		}
-	}
-	srcURL, err := url.Parse(value)
+	source.URL, err = datasources.ParseSourceURL(f)
 	if err != nil {
 		return nil, err
 	}
@@ -334,7 +308,7 @@ func (d *Data) DefineDatasource(alias, value string) (string, error) {
 	if d.DatasourceExists(alias) {
 		return "", nil
 	}
-	srcURL, err := parseSourceURL(value)
+	srcURL, err := datasources.ParseSourceURL(value)
 	if err != nil {
 		return "", err
 	}
@@ -469,37 +443,5 @@ func (d *Data) readSource(source *Source, args ...string) ([]byte, error) {
 		return nil, err
 	}
 	d.cache[cacheKey] = data
-	return data, nil
-}
-
-func readStdin(source *Source, args ...string) ([]byte, error) {
-	if stdin == nil {
-		stdin = os.Stdin
-	}
-	b, err := ioutil.ReadAll(stdin)
-	if err != nil {
-		return nil, errors.Wrapf(err, "Can't read %s", stdin)
-	}
-	return b, nil
-}
-
-func readBoltDB(source *Source, args ...string) (data []byte, err error) {
-	if source.kv == nil {
-		source.kv, err = libkv.NewBoltDB(source.URL)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if len(args) != 1 {
-		return nil, errors.New("missing key")
-	}
-	p := args[0]
-
-	data, err = source.kv.Read(p)
-	if err != nil {
-		return nil, err
-	}
-
 	return data, nil
 }

@@ -7,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"strings"
 	"testing"
 
 	"github.com/hairyhenderson/gomplate/v3/internal/config"
@@ -243,20 +242,6 @@ func (e errorReader) Read(p []byte) (n int, err error) {
 	return 0, fmt.Errorf("error")
 }
 
-func TestReadStdin(t *testing.T) {
-	defer func() {
-		stdin = nil
-	}()
-	stdin = strings.NewReader("foo")
-	out, err := readStdin(nil)
-	assert.NoError(t, err)
-	assert.Equal(t, []byte("foo"), out)
-
-	stdin = errorReader{}
-	_, err = readStdin(nil)
-	assert.Error(t, err)
-}
-
 // nolint: megacheck
 func TestDefineDatasource(t *testing.T) {
 	d := &Data{}
@@ -413,16 +398,8 @@ func TestMimeTypeWithArg(t *testing.T) {
 	}
 }
 
-func TestQueryParse(t *testing.T) {
-	expected := &url.URL{
-		Scheme:   "http",
-		Host:     "example.com",
-		Path:     "/foo.json",
-		RawQuery: "bar",
-	}
-	u, err := parseSourceURL("http://example.com/foo.json?bar")
-	assert.NoError(t, err)
-	assert.EqualValues(t, expected, u)
+func TestNewSource(t *testing.T) {
+
 }
 
 func TestAbsFileURL(t *testing.T) {
