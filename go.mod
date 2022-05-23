@@ -5,7 +5,8 @@ go 1.18
 require (
 	github.com/Masterminds/goutils v1.1.1
 	github.com/Shopify/ejson v1.3.3
-	github.com/aws/aws-sdk-go v1.44.4
+	github.com/apparentlymart/go-cidr v1.1.0
+	github.com/aws/aws-sdk-go v1.44.14
 	github.com/docker/libkv v0.2.2-0.20180912205406-458977154600
 	github.com/fullsailor/pkcs7 v0.0.0-20190404230743-d7302db945fa
 	github.com/go-git/go-billy/v5 v5.3.1
@@ -34,7 +35,7 @@ require (
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 	gotest.tools/v3 v3.2.0
 	inet.af/netaddr v0.0.0-20211027220019-c74959edd3b6
-	k8s.io/client-go v0.23.6
+	k8s.io/client-go v0.24.0
 )
 
 require (
